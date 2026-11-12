@@ -1,33 +1,36 @@
-"""
-Command line runner for the Music Recommender Simulation.
+"""Command line runner for the Music Recommender Simulation (CLI-first)."""
 
-This file helps you quickly run and test your recommender.
+from src.recommender import load_songs, recommend_songs, WEIGHTS
 
-You will implement the functions in recommender.py:
-- load_songs
-- score_song
-- recommend_songs
-"""
+PROFILES = {
+    "High-Energy Pop": {"genre": "pop", "mood": "happy", "energy": 0.8, "likes_acoustic": False},
+    "Chill Lofi": {"genre": "lofi", "mood": "chill", "energy": 0.35, "likes_acoustic": True},
+    "Deep Intense Rock": {"genre": "rock", "mood": "intense", "energy": 0.92, "likes_acoustic": False},
+    # Adversarial profiles
+    "Conflicted (high energy + sad)": {"genre": "blues", "mood": "sad", "energy": 0.9, "likes_acoustic": False},
+    "Unknown genre (k-pop)": {"genre": "k-pop", "mood": "happy", "energy": 0.7, "likes_acoustic": False},
+}
 
-from recommender import load_songs, recommend_songs
+# Experiment: double energy, halve genre
+SHIFTED = {**WEIGHTS, "genre": 1.0, "energy": 2.0}
+
+
+def show(name: str, prefs: dict, songs: list, weights: dict = None) -> None:
+    """Print the top 5 recommendations for one profile."""
+    print(f"\n=== {name} ===")
+    for i, (song, score, why) in enumerate(recommend_songs(prefs, songs, k=5, weights=weights), 1):
+        print(f"{i}. {song['title']} ({song['genre']}/{song['mood']}) - {score:.2f}")
+        print(f"   {why}")
 
 
 def main() -> None:
-    songs = load_songs("data/songs.csv") 
-
-    # Starter example profile
-    user_prefs = {"genre": "pop", "mood": "happy", "energy": 0.8}
-
-    recommendations = recommend_songs(user_prefs, songs, k=5)
-
-    print("\nTop recommendations:\n")
-    for rec in recommendations:
-        # You decide the structure of each returned item.
-        # A common pattern is: (song, score, explanation)
-        song, score, explanation = rec
-        print(f"{song['title']} - Score: {score:.2f}")
-        print(f"Because: {explanation}")
-        print()
+    songs = load_songs("data/songs.csv")
+    print(f"Loaded songs: {len(songs)}")
+    for name, prefs in PROFILES.items():
+        show(name, prefs, songs)
+    print("\n\n##### EXPERIMENT: genre weight 1.0, energy weight 2.0 #####")
+    for name in ("High-Energy Pop", "Conflicted (high energy + sad)"):
+        show(name + " [shifted]", PROFILES[name], songs, SHIFTED)
 
 
 if __name__ == "__main__":
